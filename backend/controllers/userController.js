@@ -189,39 +189,33 @@ const registerUser = asyncHandler( async (req,res) => {
 
    })
 
-   // const updateUser = asyncHandler(async (req, res) => {
-   //    try {
-   //      console.log("Request Body:", req.body);
-    
-   //      const user = await User.findById(req.user._id);
-    
-   //      if (user) {
-   //        const { name, email, photo, phone, bio } = user;
-   //        user.email = email;
-   //        user.name = req.body.name || name;
-   //        user.photo = req.body.photo || photo;
-   //        user.phone = req.body.phone || phone;
-   //        user.bio = req.body.bio || bio;
-    
-   //        const updatedUser = await user.save();
-   //        console.log("Updated User:", updatedUser);
-    
-   //        res.status(200).json({
-   //          _id: updatedUser._id,
-   //          name: updatedUser.name,
-   //          email: updatedUser.email,
-   //          photo: updatedUser.photo,
-   //          phone: updatedUser.phone,
-   //          bio: updatedUser.bio,
-   //        });
-   //      } else {
-   //        res.status(404).json({ message: "User not found" });
-   //      }
-   //    } catch (error) {
-   //      console.error("Error in updateUser:", error);
-   //      res.status(500).json({ message: "Internal Server Error" });
-   //    }
-   //  });
+   //Change Password
+   const changePassword = asyncHandler(async (req,res) => {
+      const user = await User.findById(req.user._id)
+      const {oldPassword, password} = req.body
+
+      if(!user) {
+         res.status(400)
+         throw new Error("User not found, please sign up")
+      }
+      //Validate
+      if(!oldPassword || !password) {
+         res.status(404)
+         throw new Error("Please add old and new password")
+      }
+      //Check if old password matches password in DB
+      const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password)
+
+      // Save new password
+      if(user && passwordIsCorrect) {
+         user.password = password
+         await user.save()
+         res.status(200).send("Password changed successfully")
+      } else {
+         res.status(400)
+         throw new Error("Old password is incorrect")
+      }
+   })
     
 
-module.exports = {registerUser,loginUser, logout, getUser,loginStatus,updateUser}
+module.exports = {registerUser,loginUser,logout,getUser,loginStatus,updateUser,changePassword}
