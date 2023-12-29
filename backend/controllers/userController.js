@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler")
-const User = require("../models/userModel")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs")
+const User = require("../models/userModel")
 
 const generateToken = (id) => {
    return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "1d"})
@@ -161,5 +161,67 @@ const registerUser = asyncHandler( async (req,res) => {
     return res.json(false)
    })
 
+   //Update User
+   const updateUser = asyncHandler( async (req,res)=> {
+     const user = await User.findById(req.user._id)
 
-module.exports = {registerUser,loginUser, logout, getUser,loginStatus}
+     if(user) {
+      const {name,email,photo,phone,bio} = user;
+      user.email = email
+      user.name = req.body.name || name
+      user.photo = req.body.photo || photo
+      user.phone = req.body.phone || phone
+      user.bio = req.body.bio || bio
+      
+      const updatedUser = await user.save()
+      res.status(200).json({
+         _id: updatedUser._id,
+         name: updatedUser.name,
+         email: updatedUser.email,
+         photo: updatedUser.photo,
+         phone: updatedUser.phone,
+         bio: updatedUser.bio
+      })
+     } else {
+      res.status(404)
+      throw new Error("User not found")
+     }
+
+   })
+
+   // const updateUser = asyncHandler(async (req, res) => {
+   //    try {
+   //      console.log("Request Body:", req.body);
+    
+   //      const user = await User.findById(req.user._id);
+    
+   //      if (user) {
+   //        const { name, email, photo, phone, bio } = user;
+   //        user.email = email;
+   //        user.name = req.body.name || name;
+   //        user.photo = req.body.photo || photo;
+   //        user.phone = req.body.phone || phone;
+   //        user.bio = req.body.bio || bio;
+    
+   //        const updatedUser = await user.save();
+   //        console.log("Updated User:", updatedUser);
+    
+   //        res.status(200).json({
+   //          _id: updatedUser._id,
+   //          name: updatedUser.name,
+   //          email: updatedUser.email,
+   //          photo: updatedUser.photo,
+   //          phone: updatedUser.phone,
+   //          bio: updatedUser.bio,
+   //        });
+   //      } else {
+   //        res.status(404).json({ message: "User not found" });
+   //      }
+   //    } catch (error) {
+   //      console.error("Error in updateUser:", error);
+   //      res.status(500).json({ message: "Internal Server Error" });
+   //    }
+   //  });
+    
+
+module.exports = {registerUser,loginUser, logout, getUser,loginStatus,updateUser}
